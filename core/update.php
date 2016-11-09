@@ -6,13 +6,15 @@
  * Time: 21:58
  */
 
-$maks_instagram_validate = [ 'metric' , 'header' , 'media' , 'all' , 'next' ];
+$maks_instagram_validate = [ 'next' ];
 $maks_GET_instagram      = isset( $_GET['instagram'] ) ? strtolower( $_GET['instagram'] ) : false;
-$maks_instagram          = in_array( $maks_GET_instagram , $maks_instagram_validate ) ? $maks_GET_instagram : false;
+$maks_instagram          = in_array( $maks_GET_instagram , $maks_instagram_validate ) ||
+                           filter_var( $maks_GET_instagram , FILTER_VALIDATE_BOOLEAN ) ? $maks_GET_instagram : false;
 
-$maks_youtube_validate = [ 'all' ];
+$maks_youtube_validate = [ 'next' ];
 $maks_GET_youtube      = isset( $_GET['youtube'] ) ? strtolower( $_GET['youtube'] ) : false;
-$maks_youtube          = in_array( $maks_GET_youtube , $maks_youtube_validate ) ? $maks_GET_youtube : false;
+$maks_youtube          = in_array( $maks_GET_youtube , $maks_youtube_validate ) ||
+                         filter_var( $maks_GET_youtube , FILTER_VALIDATE_BOOLEAN ) ? $maks_GET_youtube : false;
 
 /** Only continue if user set specific parameters */
 ( $maks_instagram || $maks_youtube ) or die('Set the parameters.');
@@ -47,38 +49,18 @@ maks_require_wp_header();
 /**
  * INSTAGRAM SECTION
  */
-$maks_instagram_instance = NULL;
-
 if($maks_instagram) {
 
 	require_once 'class/instagram.php';
-	$maks_instagram_instance = new maks_instagram();
-}
+	$maks_instagram_instance = new maks_instagram('update');
 
-if( $maks_instagram == 'metric' | $maks_instagram == 'all' ) {
+	if($maks_instagram == 'next') {
 
-	$maks_instagram_instance->update_database_metric();
-}
+	}
 
-if( $maks_instagram == 'header' | $maks_instagram == 'all' ) {
-
-	$maks_instagram_instance->get_current_header();
-	$maks_instagram_instance->update_database_header();
-	$maks_instagram_instance->print_header();
-}
-
-if( $maks_instagram == 'media' | $maks_instagram == 'all' ) {
-
-	$maks_instagram_instance->get_current_media();
-	$maks_instagram_instance->update_database_media();
-	$maks_instagram_instance->print_media();
-}
-
-if( $maks_instagram == 'next' ) {
-
-	$maks_instagram_instance->get_next_media();
-	$maks_instagram_instance->update_database_media();
-	$maks_instagram_instance->print_media();
+	$maks_instagram_instance->get_current_data();
+	//$maks_instagram_instance->update_database();
+	//$maks_instagram_instance->print_data();
 }
 
 /** RETURN RESPONSE 200 */

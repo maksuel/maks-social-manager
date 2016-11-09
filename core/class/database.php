@@ -14,13 +14,13 @@ require_once 'services.php';
 
 class maks_database extends maks_services  {
 
-	private $database_version_key = 'maks_database_version';
-	private $database_version     = 0.1;
+	private $version_key = 'maks_database_version';
+	private $version     = 0.1;
 
-	private $database_maks_prefix    = 'maks_';
-	private $database_name_options   = 'options';
-	private $database_name_instagram = 'instagram';
-	private $database_name_youtube   = 'youtube';
+	private $maks_prefix          = 'maks_';
+	private $table_name_options   = 'options';
+	private $table_name_instagram = 'instagram';
+	private $table_name_youtube   = 'youtube';
 
 	private $column_name_key   = 'data_key';
 	private $column_name_value = 'data_value';
@@ -35,16 +35,41 @@ class maks_database extends maks_services  {
 		if( !isset($wpdb) ) { $this->error('Cannot found $wpdb'); return false; };
 
 		$wp_prefix   = $wpdb->prefix;
-		$maks_prefix = $this->database_maks_prefix;
+		$maks_prefix = $this->maks_prefix;
 		$full_prefix = $wp_prefix . $maks_prefix;
 
-		$database_name_options   = $full_prefix . $this->database_name_options;
-		$database_name_instagram = $full_prefix . $this->database_name_instagram;
-		$database_name_youtube   = $full_prefix . $this->database_name_youtube;
+		$table_name_options   = $full_prefix . $this->table_name_options;
+		$table_name_instagram = $full_prefix . $this->table_name_instagram;
+		$table_name_youtube   = $full_prefix . $this->table_name_youtube;
 
-		$this->database_name_options   = $database_name_options;
-		$this->database_name_instagram = $database_name_instagram;
-		$this->database_name_youtube   = $database_name_youtube;
+		$this->table_name_options   = $table_name_options;
+		$this->table_name_instagram = $table_name_instagram;
+		$this->table_name_youtube   = $table_name_youtube;
+	}
+
+
+	public function get_options_in_database( $table_name , $keys ) {
+
+		global $wpdb;
+		$column_name_key   = $this->get_column_name_key();
+		$column_name_value = $this->get_column_name_value();
+
+		$query = '';
+
+		foreach( $keys as $key ) {
+			if( $query != '' ) $query .= ",";
+			$query .= '\'' . $key . '\'';
+		}
+
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT {$column_name_key},{$column_name_value}
+				 FROM {$table_name}
+				 WHERE {$column_name_key}
+				 IN ({$query})", '')
+		);
+
+		return $results;
 	}
 
 
@@ -56,14 +81,14 @@ class maks_database extends maks_services  {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 
-		$table_options = "CREATE TABLE {$this->get_database_name_options()} (
+		$table_options = "CREATE TABLE {$this->get_table_name_options()} (
 			id MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
 			{$this->get_column_name_key()} VARCHAR(50) NOT NULL,
 			{$this->get_column_name_value()} VARCHAR(255) NOT NULL,			
 			PRIMARY KEY  (id)
 		) {$charset_collate};";
 
-		$table_instagram = "CREATE TABLE {$this->get_database_name_instagram()} (
+		$table_instagram = "CREATE TABLE {$this->get_table_name_instagram()} (
 			id MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
 			{$this->get_column_name_time()} datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			{$this->get_column_name_key()} VARCHAR(50) NOT NULL,
@@ -71,7 +96,7 @@ class maks_database extends maks_services  {
 			PRIMARY KEY  (id)
 		) {$charset_collate};";
 
-		$table_youtube = "CREATE TABLE {$this->get_database_name_youtube()} (
+		$table_youtube = "CREATE TABLE {$this->get_table_name_youtube()} (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			{$this->get_column_name_time()} datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			{$this->get_column_name_key()} VARCHAR(50) NOT NULL,
@@ -84,7 +109,7 @@ class maks_database extends maks_services  {
 		dbDelta($table_instagram);
 		dbDelta($table_youtube);
 
-		add_option( $this->database_version_key , $this->database_version );
+		add_option( $this->version_key , $this->version );
 	}
 
 	public function database_deactivation() {
@@ -101,13 +126,13 @@ class maks_database extends maks_services  {
 		global $wpdb;
 
 		/** Remove database version control */
-		delete_option($this->database_version_key);
+		delete_option($this->version_key);
 
 		/** Drop plugin tables */
 		$wpdb->query( "DROP TABLE IF EXISTS 
-			{$this->get_database_name_options()},
-			{$this->get_database_name_instagram()},
-			{$this->get_database_name_youtube()}"
+			{$this->get_table_name_options()},
+			{$this->get_table_name_instagram()},
+			{$this->get_table_name_youtube()}"
 		);
 	}
 
@@ -129,19 +154,19 @@ class maks_database extends maks_services  {
 
 
 	/** GETTERS DATABASE */
-	public function get_database_name_options() {
+	public function get_table_name_options() {
 
-		return $this->database_name_options;
+		return $this->table_name_options;
 	}
 
-	public function get_database_name_instagram() {
+	public function get_table_name_instagram() {
 
-		return $this->database_name_instagram;
+		return $this->table_name_instagram;
 	}
 
-	public function get_database_name_youtube() {
+	public function get_table_name_youtube() {
 
-		return $this->database_name_youtube;
+		return $this->table_name_youtube;
 	}
 
 	public function get_column_name_key() {

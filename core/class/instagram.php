@@ -12,45 +12,107 @@ defined( 'ABSPATH' ) or die( 'Direct access denied!' );
 
 require_once 'database.php';
 
-class maks_instagram extends maks_database  {
+class maks_instagram extends maks_services {
 
-	private $last_update_key = 'instagram_last_update';
-	private $last_update     = '';
+	private $options_call_key_value = [
+		'last_update'              => [ 'instagram_last_update'              => ''   ],
+		'access_token'             => [ 'instagram_access_token'             => ''   ],
+		'next_url'                 => [ 'instagram_next_url'                 => ''   ],
+		'display_header'           => [ 'instagram_display_header'           => true ],
+		'metric_header'            => [ 'instagram_metric_header'            => true ],
+		'display_media'            => [ 'instagram_display_media'            => true ],
+		'number_media_display'     => [ 'instagram_number_media_display'     => 9    ],
+		'metric_media'             => [ 'instagram_metric_media'             => true ],
+		'display_likes_comments'   => [ 'instagram_display_likes_comments'   => true ],
+		'display_caption'          => [ 'instagram_display_caption'          => true ],
+		'display_load_more_button' => [ 'instagram_display_load_more_button' => true ]
+	];
+	private $options_key      = [];
+	private $options_key_call = [];
 
-	private $access_token_key = 'instagram_access_token';
-	private $access_token     = '';
+	private $instagram_call_key_value = [
+		'metric_counts' => [ 'metric_counts' => '' ]
+	];
+	private $instagram_key      = [];
+	private $instagram_key_call = [];
 
-	private $display_header_key = 'instagram_display_header';
-	private $display_header     = true;
-
-	private $metric_header_key = 'instagram_metric_header';
-	private $metric_header     = true;
-
-	private $display_media_key = 'instagram_display_media';
-	private $display_media     = true;
-
-	private $number_media_display_key = 'instagram_number_media_display';
-	private $number_media_display     = 9;
-
-	private $metric_media_key = 'instagram_metric_media';
-	private $metric_media     = true;
-
-	private $display_likes_comments_key = 'instagram_display_likes_comments';
-	private $display_likes_comments     = true;
-
-	private $display_caption_key = 'instagram_display_caption';
-	private $display_caption     = true;
-
-	private $display_load_more_button_key = 'instagram_display_load_more_button';
-	private $display_load_more_button     = true;
-
-
-	private $metric_counts_key = 'metric_counts';
-	private $metric_counts     = '';
-
+	private $database_instance;
 
 	private $rate_limit = 288;
 	private $users_self_url;
+	private $media_recent_url;
+
+	private function get_value_from_options_by_call($call) {
+
+		$key   = array_search( $call , $this->options_key_call );
+		$value = $this->options_call_key_value[$call][$key];
+
+		return $value;
+	}
+
+	public function __construct( $type ) {
+
+		foreach( $this->options_call_key_value as $call => $key_value ) {
+
+			$key = key($key_value);
+
+			array_push( $this->options_key , $key );
+			$this->options_key_call[$key] = $call;
+		}
+
+		foreach( $this->instagram_call_key_value as $call => $key_value ) {
+
+			$key = key($key_value);
+
+			array_push( $this->instagram_key , $key );
+			$this->instagram_key_call[$key] = $call;
+		}
+
+		$this->database_instance = new maks_database();
+		$table_name_options      = $this->database_instance->get_table_name_options();
+		$column_name_key         = $this->database_instance->get_column_name_key();
+		$column_name_value       = $this->database_instance->get_column_name_value();
+
+
+		if( $type == 'new' ) {
+
+		}
+
+		if( $type == 'update' ) {
+
+			$options_results =
+				$this->database_instance->get_options_in_database( $table_name_options , $this->options_key );
+
+			/** IMPORTANT */
+			if( empty($options_results) ) { $this->error('Empty return $options_results'); return false; };
+
+			foreach( $options_results as $result ) {
+
+				$key   = $result->$column_name_key;
+				$value = $result->$column_name_value;
+				$call  = $this->options_key_call[$key];
+
+				$this->options_call_key_value[$call][$key] = $value;
+			}
+
+			$access_token         = $this->get_value_from_options_by_call('access_token');
+			$number_media_display = $this->get_value_from_options_by_call('number_media_display');
+
+			$this->users_self_url   = 'https://api.instagram.com/v1/users/self/?access_token=' . $access_token;
+			$this->media_recent_url =
+				'https://api.instagram.com/v1/users/self/media/recent/?access_token=' . $access_token .
+				'&count=' . $number_media_display;
+		}
+
+		echo 'PASS';
+	}
+
+
+
+
+	public function get_current_data() {
+
+	}
 
 
 	public function update() {

@@ -21,6 +21,8 @@ class maks_services {
 
 		$this->has_error = true;
 		$this->log_error = $error_string;
+
+		die($error_string);  // TEMPORARY
 	}
 
 	protected function has_error() {
