@@ -1,0 +1,24 @@
+#maks-sm html,#maks-sm body,#maks-sm div,#maks-sm span,#maks-sm applet,#maks-sm object,#maks-sm iframe,#maks-sm h1,
+#maks-sm h2,#maks-sm h3,#maks-sm h4,#maks-sm h5,#maks-sm h6,#maks-sm p,#maks-sm blockquote,#maks-sm pre,#maks-sm a,
+#maks-sm abbr,#maks-sm acronym,#maks-sm address,#maks-sm big,#maks-sm cite,#maks-sm code,#maks-sm del,#maks-sm dfn,
+#maks-sm em,#maks-sm img,#maks-sm ins,#maks-sm kbd,#maks-sm q,#maks-sm s,#maks-sm samp,#maks-sm small,#maks-sm strike,
+#maks-sm strong,#maks-sm sub,#maks-sm sup,#maks-sm tt,#maks-sm var,#maks-sm b,#maks-sm u,#maks-sm i,#maks-sm center,
+#maks-sm dl,#maks-sm dt,#maks-sm dd,#maks-sm ol,#maks-sm ul,#maks-sm li,#maks-sm fieldset,#maks-sm form,#maks-sm label,
+#maks-sm legend,#maks-sm table,#maks-sm caption,#maks-sm tbody,#maks-sm tfoot,#maks-sm thead,#maks-sm tr,#maks-sm th,
+#maks-sm td,#maks-sm article,#maks-sm aside,#maks-sm canvas,#maks-sm details,#maks-sm embed,#maks-sm figure,
+#maks-sm figcaption,#maks-sm footer,#maks-sm header,#maks-sm hgroup,#maks-sm menu,#maks-sm nav,#maks-sm output,
+#maks-sm ruby,#maks-sm section,#maks-sm summary,#maks-sm time,#maks-sm mark,#maks-sm audio,#maks-sm video {
+    margin: 0;padding: 0;border: 0;font-size: 100%;font: inherit;vertical-align: baseline;}
+#maks-sm article,#maks-sm aside,#maks-sm details,#maks-sm figcaption,#maks-sm figure,#maks-sm footer,#maks-sm header,
+#maks-sm hgroup,#maks-sm menu,#maks-sm nav,#maks-sm section {
+    display: block;}
+#maks-sm body {
+    line-height: 1;}
+#maks-sm ol, #maks-sm ul {
+    list-style: none;}
+#maks-sm blockquote, #maks-sm q {
+    quotes: none;}
+#maks-sm blockquote:before, #maks-sm blockquote:after,#maks-sm q:before, #maks-sm q:after {
+    content: '';content: none;}
+#maks-sm table {
+    border-collapse: collapse;border-spacing: 0;}
