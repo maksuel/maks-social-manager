@@ -59,7 +59,7 @@ if($maks_instagram) {
 	}
 
 	$maks_instagram_instance->get_current_data();
-	//$maks_instagram_instance->update_database();
+	$maks_instagram_instance->update_database();
 	//$maks_instagram_instance->print_data();
 }
 

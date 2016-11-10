@@ -20,13 +20,25 @@ class maks_database extends maks_services  {
 	private $maks_prefix          = 'maks_';
 	private $table_name_options   = 'options';
 	private $table_name_instagram = 'instagram';
+	private $table_name_facebook  = 'facebook';
 	private $table_name_youtube   = 'youtube';
 
 	private $column_name_key   = 'data_key';
 	private $column_name_value = 'data_value';
 	private $column_name_time  = 'timestamp';
 
-
+	/**
+	 * CONSTRUCTOR based in Wordpress structure.
+	 *
+	 * First step: check IF EXISTS $wpdb object.
+	 * This is necessary to work with Wordpress database.
+	 *
+	 * GET Wordpress tables prefix to normalized structure;
+	 * GET MAKS Solutions prefix;
+	 * Create full prefix to tables;
+	 *
+	 * GET , RENAME and SET tables names.
+	 */
 	public function __construct() {
 
 		global $wpdb;
@@ -40,38 +52,14 @@ class maks_database extends maks_services  {
 
 		$table_name_options   = $full_prefix . $this->table_name_options;
 		$table_name_instagram = $full_prefix . $this->table_name_instagram;
+		$table_name_facebook  = $full_prefix . $this->table_name_facebook;
 		$table_name_youtube   = $full_prefix . $this->table_name_youtube;
 
 		$this->table_name_options   = $table_name_options;
 		$this->table_name_instagram = $table_name_instagram;
+		$this->table_name_facebook  = $table_name_facebook;
 		$this->table_name_youtube   = $table_name_youtube;
 	}
-
-
-	public function get_options_in_database( $table_name , $keys ) {
-
-		global $wpdb;
-		$column_name_key   = $this->get_column_name_key();
-		$column_name_value = $this->get_column_name_value();
-
-		$query = '';
-
-		foreach( $keys as $key ) {
-			if( $query != '' ) $query .= ",";
-			$query .= '\'' . $key . '\'';
-		}
-
-		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT {$column_name_key},{$column_name_value}
-				 FROM {$table_name}
-				 WHERE {$column_name_key}
-				 IN ({$query})", '')
-		);
-
-		return $results;
-	}
-
 
 	public function database_activation() {
 
@@ -136,8 +124,89 @@ class maks_database extends maks_services  {
 		);
 	}
 
+	public function get_options( $keys ) {
 
-	protected function multiple_insert_database($query) {
+		global $wpdb;
+		$table_name        = $this->get_table_name_options();
+		$column_name_key   = $this->get_column_name_key();
+		$column_name_value = $this->get_column_name_value();
+
+		$query = '';
+
+		foreach( $keys as $key ) {
+			if( $query != '' ) $query .= ",";
+			$query .= '\'' . $key . '\'';
+		}
+
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT {$column_name_key},{$column_name_value}
+				 FROM {$table_name}
+				 WHERE {$column_name_key}
+				 IN ({$query})", '')
+		);
+
+		return $results;
+	}
+
+	public function get_instagram( $keys , $filter_limit ) {
+
+		global $wpdb;
+		$table_name        = $this->get_table_name_instagram();
+		$column_name_key   = $this->get_column_name_key();
+		$column_name_value = $this->get_column_name_value();
+		$column_name_time  = $this->get_column_name_time();
+
+		$query = '';
+
+		foreach( $keys as $key ) {
+			if( $query != '' ) $query .= ",";
+			$query .= '\'' . $key . '\'';
+		}
+
+		$limit = '';
+
+		if($filter_limit) {
+
+			$limit = 'LIMIT ' . (int)$filter_limit;
+		}
+
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT {$column_name_time},{$column_name_key},{$column_name_value}
+				 FROM {$table_name}
+				 WHERE {$column_name_key}
+				 IN ({$query})
+				 ORDER BY {$column_name_time}
+				 DESC {$limit}", '')
+		);
+
+		return $results;
+	}
+
+	public function update_options( $key , $value ) {
+
+		global $wpdb;
+		$table_name        = $this->get_table_name_options();
+		$column_name_key   = $this->get_column_name_key();
+		$column_name_value = $this->get_column_name_value();
+
+		$response = $wpdb->update(
+			$table_name,
+			array(
+				$column_name_value => $value
+			),
+			array(
+				$column_name_key => $key
+			)
+		);
+
+		return $response;
+	}
+
+
+
+	public function multiple_insert_database($query) {
 
 		global $wpdb;
 
@@ -153,54 +222,15 @@ class maks_database extends maks_services  {
 	}
 
 
-	/** GETTERS DATABASE */
-	public function get_table_name_options() {
-
-		return $this->table_name_options;
-	}
-
-	public function get_table_name_instagram() {
-
-		return $this->table_name_instagram;
-	}
-
-	public function get_table_name_youtube() {
-
-		return $this->table_name_youtube;
-	}
-
-	public function get_column_name_key() {
-
-		return $this->column_name_key;
-	}
-
-	public function get_column_name_value() {
-
-		return $this->column_name_value;
-	}
-
-	public function get_column_name_time() {
-
-		return $this->column_name_time;
-	}
-
-
 	/**
-	 * GETTERS of current time
+	 * GETTERS: tables names / column names.
+	 *
+	 * @return string
 	 */
-	public function get_current_time_string() {
-
-		$current_time_string = current_time('mysql');
-
-		return $current_time_string;
-	}
-
-	public function get_current_unix_time() {
-
-		$current_unix_time = strtotime(
-			$this->get_current_time_string()
-		);
-
-		return $current_unix_time;
-	}
+	public function get_table_name_options()   { return $this->table_name_options;   }
+	public function get_table_name_instagram() { return $this->table_name_instagram; }
+	public function get_table_name_youtube()   { return $this->table_name_youtube;   }
+	public function get_column_name_key()      { return $this->column_name_key;      }
+	public function get_column_name_value()    { return $this->column_name_value;    }
+	public function get_column_name_time()     { return $this->column_name_time;     }
 }

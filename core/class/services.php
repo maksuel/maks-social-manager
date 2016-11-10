@@ -15,8 +15,9 @@ class maks_services {
 	private $has_error = false;
 	private $log_error = '';
 
-
-	/** ERROR BLOCK */
+	/**
+	 * ERROR BLOCK
+	 */
 	protected function error($error_string) {
 
 		$this->has_error = true;
@@ -47,8 +48,9 @@ class maks_services {
 		}
 	}
 
-
-	/** Method to make connection to get json data */
+	/**
+	 * Make connection to get json data
+	 */
 	protected function get_json($url) {
 
 		/** skip if has error */
@@ -64,5 +66,24 @@ class maks_services {
 		if( $response == false ) { $this->error('Connection curl FAIL'); return false; };
 
 		return json_decode($response, true);
+	}
+
+	/**
+	 * GETTERS of current time
+	 */
+	protected function get_current_time_string() {
+
+		$current_time_string = current_time('mysql');
+
+		return $current_time_string;
+	}
+
+	protected function get_current_unix_time() {
+
+		$current_unix_time = strtotime(
+			$this->get_current_time_string()
+		);
+
+		return $current_unix_time;
 	}
 }
