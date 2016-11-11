@@ -64,7 +64,7 @@ class maks_database extends maks_services  {
 	public function database_activation() {
 
 		/** skip if has error and print log */
-		if( $this->has_error() ) { echo $this->get_log_error(); return false; };
+		if( $this->has_error() ) { $this->print_errors(); return false; };
 
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
@@ -103,13 +103,13 @@ class maks_database extends maks_services  {
 	public function database_deactivation() {
 
 		/** skip if has error and print log */
-		if( $this->has_error() ) { echo $this->get_log_error(); return false; };
+		if( $this->has_error() ) { $this->print_errors(); return false; };
 	}
 
 	public function database_uninstall() {
 
 		/** skip if has error and print log */
-		if( $this->has_error() ) { echo $this->get_log_error(); return false; };
+		if( $this->has_error() ) { $this->print_errors(); return false; };
 
 		global $wpdb;
 

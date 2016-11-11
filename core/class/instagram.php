@@ -168,13 +168,13 @@ class maks_instagram extends maks_services {
 
 			if( $display_header || $metric_header ) {
 
-				$this->users_self_response = $this->get_json($this->users_self_url);
+				$this->users_self_response = $this->make_request($this->users_self_url);
 				$get_json = true;
 			}
 
 			if( $display_media || $metric_media ) {
 
-				$media_recent_data = $this->get_json($this->media_recent_url);
+				$media_recent_data = $this->make_request($this->media_recent_url);
 
 				$last_next_max_id    = $this->get_value_from_options_by_call('next_max_id');
 				$current_next_max_id = $media_recent_data['pagination']['next_max_id'];

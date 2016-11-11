@@ -12,35 +12,55 @@ defined( 'ABSPATH' ) or die( 'Direct access denied!' );
 
 class maks_services {
 
-	private $has_error = false;
-	private $log_error = '';
+	private $has_error      = false;
+	private $error_messages = [];
 
 	/**
-	 * ERROR BLOCK
+	 * die() showing error or push errors into private variable.
+	 *
+	 * @param $error_message
+	 * @param bool $die
 	 */
-	protected function error($error_string) {
+	protected function error( $error_message , $die = true ) {
+
+		if($die) die($error_message);
 
 		$this->has_error = true;
-		$this->log_error = $error_string;
 
-		die($error_string);  // TEMPORARY
+		array_push(
+			$this->error_messages,
+			$error_message
+		);
 	}
 
+	/**
+	 * @return bool
+	 */
 	protected function has_error() {
 
 		return $this->has_error;
 	}
 
-	protected function get_log_error() {
+	/**
+	 * @return array
+	 */
+	protected function get_error_messages() {
 
-		return $this->log_error;
+		return $this->error_messages;
 	}
 
-	protected function print_error() {
+	/**
+	 * Print errors or
+	 * @return bool
+	 */
+	public function print_errors() {
 
 		if($this->has_error) {
 
-			echo $this->log_error;
+			foreach($this->error_messages as $error_message) {
+
+				print_r( $error_message . PHP_EOL );
+			}
 
 		} else {
 
@@ -49,12 +69,14 @@ class maks_services {
 	}
 
 	/**
-	 * Make connection to get json data
+	 * Maker of requests to APIs
+	 *
+	 * @param $url
+	 * @param bool $decode
+	 *
+	 * @return array|bool|mixed
 	 */
-	protected function get_json($url) {
-
-		/** skip if has error */
-		if( $this->has_error() ) { return false; };
+	protected function make_request( $url , $decode = true ) {
 
 		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -63,13 +85,35 @@ class maks_services {
 		$response = curl_exec($curl);
 		curl_close($curl);
 
-		if( $response == false ) { $this->error('Connection curl FAIL'); return false; };
+		if( $response === false ) { $this->error( 'Connection url FAIL => ' . $url , false ); return false; };
 
-		return json_decode($response, true);
+		if($decode) { $response = $this->decode($response); }
+
+		return $response;
 	}
 
 	/**
-	 * GETTERS of current time
+	 * @param $string
+	 *
+	 * @return array
+	 */
+	protected function decode( $string ) {
+
+		return json_decode( $string , true );
+	}
+
+	/**
+	 * @param $mixed
+	 *
+	 * @return string
+	 */
+	protected function encode( $mixed ) {
+
+		return json_encode( $mixed );
+	}
+
+	/**
+	 * @return string
 	 */
 	protected function get_current_time_string() {
 
@@ -78,6 +122,9 @@ class maks_services {
 		return $current_time_string;
 	}
 
+	/**
+	 * @return false|int
+	 */
 	protected function get_current_unix_time() {
 
 		$current_unix_time = strtotime(
