@@ -129,7 +129,6 @@ class maks_database extends maks_services  {
 		global $wpdb;
 		$table_name        = $this->get_table_name_options();
 		$column_name_key   = $this->get_column_name_key();
-		$column_name_value = $this->get_column_name_value();
 
 		$query = '';
 
@@ -140,7 +139,7 @@ class maks_database extends maks_services  {
 
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT {$column_name_key},{$column_name_value}
+				"SELECT *
 				 FROM {$table_name}
 				 WHERE {$column_name_key}
 				 IN ({$query})", '')
@@ -154,7 +153,6 @@ class maks_database extends maks_services  {
 		global $wpdb;
 		$table_name        = $this->get_table_name_instagram();
 		$column_name_key   = $this->get_column_name_key();
-		$column_name_value = $this->get_column_name_value();
 		$column_name_time  = $this->get_column_name_time();
 
 		$query = '';
@@ -173,7 +171,7 @@ class maks_database extends maks_services  {
 
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT {$column_name_time},{$column_name_key},{$column_name_value}
+				"SELECT *
 				 FROM {$table_name}
 				 WHERE {$column_name_key}
 				 IN ({$query})
@@ -182,6 +180,31 @@ class maks_database extends maks_services  {
 		);
 
 		return $results;
+	}
+
+	public function insert_instagram( $key , $value , $time ) {
+
+		global $wpdb;
+		$table_name        = $this->get_table_name_instagram();
+		$column_name_key   = $this->get_column_name_key();
+		$column_name_value = $this->get_column_name_value();
+		$column_name_time  = $this->get_column_name_time();
+
+		if( empty($time) ) {
+
+			$time = $this->get_current_time_string();
+		}
+
+		$response = $wpdb->insert(
+			$table_name,
+			array(
+				$column_name_key   => $key,
+				$column_name_value => $value,
+				$column_name_time  => $time
+			)
+		);
+
+		return $response;
 	}
 
 	public function update_options( $key , $value ) {
@@ -198,6 +221,32 @@ class maks_database extends maks_services  {
 			),
 			array(
 				$column_name_key => $key
+			)
+		);
+
+		return $response;
+	}
+
+	public function update_instagram( $id , $value , $time ) {
+
+		global $wpdb;
+		$table_name        = $this->get_table_name_instagram();
+		$column_name_value = $this->get_column_name_value();
+		$column_name_time  = $this->get_column_name_time();
+
+		if( empty($time) ) {
+
+			$time = $this->get_current_time_string();
+		}
+
+		$response = $wpdb->update(
+			$table_name,
+			array(
+				$column_name_time  => $time,
+				$column_name_value => $value
+			),
+			array(
+				'id' => $id
 			)
 		);
 

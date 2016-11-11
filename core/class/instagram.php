@@ -32,7 +32,7 @@ class maks_instagram extends maks_services {
 		'metric_counts' => [ 'metric_counts' => '' , 'string' ]
 	];
 
-	private $rate_limit = 288;
+	private $rate_limit = 1440;
 
 	/**
 	 * DEPENDENCIES
@@ -216,13 +216,103 @@ class maks_instagram extends maks_services {
 
 			if($display_header) {
 
+				$key_id[] = $users_self_data['id'];
+
+				unset( $users_self_data['id'] ); // Remove id from data
+
+				$current_data     = json_encode($users_self_data);
+				$last_data_return = $this->database_instance->get_instagram( $key_id , 1 );
+
+
+				if( empty($last_data_return) ) {
+
+					$this->database_instance->insert_instagram( $key_id[0] , $current_data , '' );
+
+				} else {
+
+					$column_name_value = $this->database_instance->get_column_name_value();
+
+					$last_data_id = $last_data_return[0]->id;
+					$last_data = $last_data_return[0]->$column_name_value;
+
+					$is_equals = strcmp( $current_data , $last_data ) != 0;
+
+					if($is_equals) {
+
+						$this->database_instance->update_instagram( $last_data_id , $current_data , '' );
+					}
+				}
+
 			}
 
 			if($metric_header) {
 
-				$key[]  = $this->get_key_from_instagram_by_call('metric_counts');
-				$return = $this->database_instance->get_instagram( $key , 1);
+				$key_metric_counts[]  = $this->get_key_from_instagram_by_call('metric_counts');
 
+				$media        = $users_self_data['counts']['media'];
+				$followed_by  = $users_self_data['counts']['followed_by'];
+				$follows      = $users_self_data['counts']['follows'];
+				$current_time = $this->get_current_unix_time();
+
+				$last_data_return = $this->database_instance->get_instagram( $key_metric_counts , 1);
+
+				if( empty($last_data_return) ) {
+
+					$metric_values = [ [ $current_time , [ $media , $followed_by , $follows ] ] ];
+					$metric_data   = json_encode($metric_values);
+
+					$this->database_instance->insert_instagram( $key_metric_counts[0] , $metric_data , '' );
+
+				} else {
+
+					$column_name_time = $this->database_instance->get_column_name_time();
+
+					$last_update          = $last_data_return[0]->$column_name_time;
+					$last_update_datetime = new DateTime($last_update);
+					$last_update_datetime = $last_update_datetime->format('Y-m-d');
+
+					$current_time_string   = $this->get_current_time_string();
+					$current_time_datetime = new DateTime($current_time_string);
+					$current_time_datetime = $current_time_datetime->format('Y-m-d');
+
+					if( $last_update_datetime != $current_time_datetime ) {
+
+						$metric_values = [ [ $current_time , [ $media , $followed_by , $follows ] ] ];
+						$metric_data   = json_encode($metric_values);
+
+						$this->database_instance->insert_instagram( $key_metric_counts[0] , $metric_data , '' );
+
+					} else {
+
+						$column_name_value = $this->database_instance->get_column_name_value();
+
+						$last_update_value = $last_data_return[0]->$column_name_value;
+						$last_update_array = json_decode( $last_update_value , true );
+						$last_update_size  = sizeof($last_update_array);
+						$last_update       = $last_update_array[$last_update_size - 1];
+
+						$last_update_media       = $last_update[1][0];
+						$last_update_followed_by = $last_update[1][1];
+						$last_update_follows     = $last_update[1][2];
+
+						$check_media       = $media       != $last_update_media;
+						$check_followed_by = $followed_by != $last_update_followed_by;
+						$check_follows     = $follows     != $last_update_follows;
+
+						if( $check_media || $check_followed_by || $check_follows ) {
+
+							$last_data_id = $last_data_return[0]->id;
+
+							$metric_values = [ $current_time , [ $media , $followed_by , $follows ] ];
+
+							array_push( $last_update_array , $metric_values );
+
+							$metric_data = json_encode($last_update_array);
+
+							$this->database_instance->update_instagram( $last_data_id , $metric_data , '' );
+						}
+					}
+				}
 			}
 		}
 
@@ -238,19 +328,6 @@ class maks_instagram extends maks_services {
 
 			}
 		}
-
-		//if display true
-		// json encode header
-
-		//if metric true
-
-
-
-		var_dump();
-		echo '<br /><br />';
-		print_r($this->users_self_response);
-		echo '<br /><br />';
-		print_r( $this->media_recent_response);
 	}
 
 
