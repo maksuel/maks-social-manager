@@ -20,10 +20,10 @@ define( 'MAKS_SOCIAL_MANAGER_DIR', trailingslashit( dirname(__FILE__) ) );
 
 class MAKS_Social_Manager {
 
-	/**
-	 * @var MAKS_Social_Manager
-	 */
 	private static $_this;
+
+	private $database_instance;
+	private $instagram_instance;
 
 	/**
 	 * MAKS_Social_Manager constructor.
@@ -42,19 +42,30 @@ class MAKS_Social_Manager {
 
 		require_once 'core/class/instagram.php';
 
+
+
 		function maks_database_activation() {
 
-			$maks_essential = new maks_essential();
-			$maks_essential->database_activation();
+			$database_instance  = new maks_database();
+			$instagram_instance = new maks_instagram();
 
-			$maks_instagram = new maks_instagram();
-			$maks_instagram->construct_database();
+			$database_instance->database_activation();
+
+			$instagram_instance->populate();
+		}
+
+		function maks_database_deactivation() {
+
+			$database_instance = new maks_database();
+
+			$database_instance->database_deactivation();
 		}
 
 		function maks_database_uninstall() {
 
-			$maks_essential = new maks_essential();
-			$maks_essential->database_uninstall();
+			$database_instance = new maks_database();
+
+			$database_instance->database_uninstall();
 		}
 
 //		function maks_database_update() {
@@ -73,9 +84,9 @@ class MAKS_Social_Manager {
 //			}
 //		}
 
-		register_activation_hook( __FILE__ , 'maks_database_activation' );
-		register_deactivation_hook( __FILE__ , 'maks_database_uninstall' );
-		register_uninstall_hook( __FILE__ , 'maks_database_uninstall' );
+		register_activation_hook(   __FILE__ , 'maks_database_activation'   );
+		register_deactivation_hook( __FILE__ , 'maks_database_deactivation' );
+		register_uninstall_hook(    __FILE__ , 'maks_database_uninstall'    );
 
 
 		/**
@@ -172,7 +183,4 @@ class MAKS_Social_Manager {
 	}
 }
 
-/**
- *
- */
 new MAKS_Social_Manager();
