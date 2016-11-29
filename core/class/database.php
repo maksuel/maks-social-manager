@@ -17,7 +17,7 @@ class maks_database extends maks_services  {
 	private $version_key = 'maks_database_version';
 	private $version     = 0.1;
 
-	private $maks_prefix          = 'maks_';
+	private $maks_prefix = 'maks_';
 	private $table_name_options   = 'options';
 	private $table_name_instagram = 'instagram';
 	private $table_name_facebook  = 'facebook';
@@ -78,15 +78,23 @@ class maks_database extends maks_services  {
 
 		$table_instagram = "CREATE TABLE {$this->get_table_name_instagram()} (
 			id MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
-			{$this->get_column_name_time()} datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			{$this->get_column_name_time()} DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			{$this->get_column_name_key()} VARCHAR(50) NOT NULL,
+			{$this->get_column_name_value()} TEXT NOT NULL,				
+			PRIMARY KEY  (id)
+		) {$charset_collate};";
+
+		$table_facebook = "CREATE TABLE {$this->get_table_name_facebook()} (
+			id MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
+			{$this->get_column_name_time()} DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			{$this->get_column_name_key()} VARCHAR(50) NOT NULL,
 			{$this->get_column_name_value()} TEXT NOT NULL,				
 			PRIMARY KEY  (id)
 		) {$charset_collate};";
 
 		$table_youtube = "CREATE TABLE {$this->get_table_name_youtube()} (
-			id mediumint(9) NOT NULL AUTO_INCREMENT,
-			{$this->get_column_name_time()} datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			id MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
+			{$this->get_column_name_time()} DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			{$this->get_column_name_key()} VARCHAR(50) NOT NULL,
 			{$this->get_column_name_value()} TEXT NOT NULL,				
 			PRIMARY KEY  (id)
@@ -95,7 +103,8 @@ class maks_database extends maks_services  {
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 		dbDelta($table_options);
 		dbDelta($table_instagram);
-		dbDelta($table_youtube);
+//		dbDelta($table_facebook);
+//		dbDelta($table_youtube);
 
 		add_option( $this->version_key , $this->version );
 	}
@@ -104,6 +113,8 @@ class maks_database extends maks_services  {
 
 		/** skip if has error and print log */
 		if( $this->has_error() ) { $this->print_errors(); return false; };
+
+		$this->database_uninstall(); // TEMPORARY
 	}
 
 	public function database_uninstall() {
@@ -120,6 +131,7 @@ class maks_database extends maks_services  {
 		$wpdb->query( "DROP TABLE IF EXISTS 
 			{$this->get_table_name_options()},
 			{$this->get_table_name_instagram()},
+			{$this->get_table_name_facebook()},
 			{$this->get_table_name_youtube()}"
 		);
 	}
@@ -127,8 +139,8 @@ class maks_database extends maks_services  {
 	public function get_options( $keys ) {
 
 		global $wpdb;
-		$table_name        = $this->get_table_name_options();
-		$column_name_key   = $this->get_column_name_key();
+		$table_name      = $this->get_table_name_options();
+		$column_name_key = $this->get_column_name_key();
 
 		$query = '';
 
@@ -151,9 +163,9 @@ class maks_database extends maks_services  {
 	public function get_instagram( $keys , $filter_limit ) {
 
 		global $wpdb;
-		$table_name        = $this->get_table_name_instagram();
-		$column_name_key   = $this->get_column_name_key();
-		$column_name_time  = $this->get_column_name_time();
+		$table_name       = $this->get_table_name_instagram();
+		$column_name_key  = $this->get_column_name_key();
+		$column_name_time = $this->get_column_name_time();
 
 		$query = '';
 
@@ -278,6 +290,7 @@ class maks_database extends maks_services  {
 	 */
 	public function get_table_name_options()   { return $this->table_name_options;   }
 	public function get_table_name_instagram() { return $this->table_name_instagram; }
+	public function get_table_name_facebook()  { return $this->table_name_facebook;  }
 	public function get_table_name_youtube()   { return $this->table_name_youtube;   }
 	public function get_column_name_key()      { return $this->column_name_key;      }
 	public function get_column_name_value()    { return $this->column_name_value;    }

@@ -12,12 +12,20 @@ defined( 'ABSPATH' ) or die( 'Direct access denied!' );
 
 class maks_services {
 
-	private $has_error      = false;
+	/**
+	 * Defines if the application has error into the instance.
+	 * @var bool
+	 */
+	private $has_error = false;
+
+	/**
+	 * Group all the error messages that the instance has.
+	 * @var array
+	 */
 	private $error_messages = [];
 
 	/**
 	 * die() showing error or push errors into private variable.
-	 *
 	 * @param $error_message
 	 * @param bool $die
 	 */
@@ -69,14 +77,13 @@ class maks_services {
 	}
 
 	/**
-	 * Maker of requests to APIs
-	 *
+	 * Make requests to APIs.
 	 * @param $url
-	 * @param bool $decode
+	 * @param bool $json_decode
 	 *
-	 * @return array|bool|mixed
+	 * @return array|bool
 	 */
-	protected function make_request( $url , $decode = true ) {
+	protected function make_request( $url , $json_decode = true ) {
 
 		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -87,7 +94,7 @@ class maks_services {
 
 		if( $response === false ) { $this->error( 'Connection url FAIL => ' . $url , false ); return false; };
 
-		if($decode) { $response = $this->decode($response); }
+		if($json_decode) { $response = $this->decode($response); }
 
 		return $response;
 	}

@@ -54,15 +54,16 @@ if($maks_instagram) {
 	require_once 'class/instagram.php';
 	$maks_instagram_instance = new maks_instagram('update');
 
-	if($maks_instagram == 'next') {
-
-	}
-
 	$maks_instagram_instance->get_current_data();
 	$maks_instagram_instance->update_database();
-	//$maks_instagram_instance->print_data();
 
-	$maks_instagram_instance->print_errors();
+	if($maks_instagram == 'next') {
+
+		// TODO
+	}
+
+	//$maks_instagram_instance->print_data();
+	//$maks_instagram_instance->print_errors();
 }
 
 /** RETURN RESPONSE 200 */

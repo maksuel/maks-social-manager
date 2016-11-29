@@ -29,7 +29,7 @@ class maks_instagram extends maks_services {
 	];
 
 	private $instagram_call_key_value_casting = [
-		'metric_counts' => [ 'metric_counts' => '' , 'string' ]
+		'metric_counts'            => [ 'metric_counts'                      => ''   , 'string' ]
 	];
 
 	private $rate_limit = 1440;
@@ -37,6 +37,8 @@ class maks_instagram extends maks_services {
 	/**
 	 * DEPENDENCIES
 	 */
+	private $database_instance;
+
 	private $options_key      = [];
 	private $options_key_call = [];
 
@@ -49,10 +51,6 @@ class maks_instagram extends maks_services {
 	private $media_recent_url  = '';
 	private $media_recent_response = '';
 
-	private $next_url = '';
-
-	private $database_instance;
-
 	/**
 	 * CONSTRUCTOR based in type of instance
 	 *
@@ -60,6 +58,9 @@ class maks_instagram extends maks_services {
 	 */
 	public function __construct( $type ) {
 
+		/**
+		 * Construct dependencies
+		 */
 		foreach( $this->options_call_key_value_casting as $call => $key_value_casting ) {
 
 			$key = key($key_value_casting);
@@ -77,13 +78,16 @@ class maks_instagram extends maks_services {
 		}
 
 		$this->database_instance = new maks_database();
-//		$table_name_options      = $this->database_instance->get_table_name_options();
+
+		/**
+		 * DEFINES
+		 */
 		$column_name_key         = $this->database_instance->get_column_name_key();
 		$column_name_value       = $this->database_instance->get_column_name_value();
 
-
 		if( $type == 'new' ) {
 
+			// TODO
 		}
 
 		if( $type == 'update' ) {
@@ -105,17 +109,11 @@ class maks_instagram extends maks_services {
 
 			$access_token         = $this->get_value_from_options_by_call('access_token');
 			$number_media_display = $this->get_value_from_options_by_call('number_media_display');
-			$next_max_id          = $this->get_value_from_options_by_call('next_max_id');
 
 			$this->users_self_url   = 'https://api.instagram.com/v1/users/self/?access_token=' . $access_token;
 			$this->media_recent_url =
 				'https://api.instagram.com/v1/users/self/media/recent/?access_token=' . $access_token .
 				'&count=' . $number_media_display;
-
-			if( !empty($next_max_id) ) {
-
-				$this->next_url = $this->media_recent_url . '&max_id=' . $next_max_id;
-			}
 		}
 	}
 
@@ -151,46 +149,41 @@ class maks_instagram extends maks_services {
 		return $key;
 	}
 
-	public function get_current_data() {
+	private function is_validate() {
 
 		$last_update  = $this->get_value_from_options_by_call('last_update');
 		$rate_limit   = $this->rate_limit;
 		$current_time = $this->get_current_unix_time();
 
-		if( empty($last_update) || ($current_time - $last_update) > (86400 / $rate_limit) ) {
+		if( empty($last_update) || ($current_time - $last_update) > (86400 / $rate_limit) ) return true;
+
+		return false;
+	}
+
+	public function get_current_data() {
+
+		if( $this->is_validate() ) {
 
 			$display_header = $this->get_value_from_options_by_call('display_header');
 			$metric_header  = $this->get_value_from_options_by_call('metric_header');
 			$display_media  = $this->get_value_from_options_by_call('display_media');
 			$metric_media   = $this->get_value_from_options_by_call('metric_media');
 
-			$get_json = false;
+			$get_response = false;
 
 			if( $display_header || $metric_header ) {
 
 				$this->users_self_response = $this->make_request($this->users_self_url);
-				$get_json = true;
+				$get_response = true;
 			}
 
 			if( $display_media || $metric_media ) {
 
-				$media_recent_data = $this->make_request($this->media_recent_url);
-
-				$last_next_max_id    = $this->get_value_from_options_by_call('next_max_id');
-				$current_next_max_id = $media_recent_data['pagination']['next_max_id'];
-
-				if( $last_next_max_id != $current_next_max_id ) {
-
-					$next_max_id_key = $this->get_key_from_options_by_call('next_max_id');
-					$this->database_instance->update_options( $next_max_id_key, $current_next_max_id );
-				}
-
-				$this->media_recent_response= $media_recent_data;
-
-				$get_json = true;
+				$this->media_recent_response = $this->make_request($this->media_recent_url);
+				$get_response = true;
 			}
 
-			if($get_json) {
+			if($get_response) {
 
 				$last_update_key = $this->get_key_from_options_by_call('last_update');
 				$current_time    = $this->get_current_unix_time();
@@ -256,11 +249,16 @@ class maks_instagram extends maks_services {
 
 				$last_data_return = $this->database_instance->get_instagram( $key_metric_counts , 1);
 
+				$metric_counts_array = [ $media , $followed_by , $follows ] ;
+				$metrics_array       = [ $current_time , $metric_counts_array ];
+				$new_metric_values   = [
+					'metrics'     => [ $metrics_array ],
+					'last_counts' => $metric_counts_array
+				];
+
 				if( empty($last_data_return) ) {
 
-					$metric_values = [ [ $current_time , [ $media , $followed_by , $follows ] ] ];
-					$metric_data   = json_encode($metric_values);
-
+					$metric_data = json_encode($new_metric_values);
 					$this->database_instance->insert_instagram( $key_metric_counts[0] , $metric_data , '' );
 
 				} else {
@@ -277,9 +275,7 @@ class maks_instagram extends maks_services {
 
 					if( $last_update_datetime != $current_time_datetime ) {
 
-						$metric_values = [ [ $current_time , [ $media , $followed_by , $follows ] ] ];
-						$metric_data   = json_encode($metric_values);
-
+						$metric_data = json_encode($new_metric_values);
 						$this->database_instance->insert_instagram( $key_metric_counts[0] , $metric_data , '' );
 
 					} else {
@@ -288,24 +284,28 @@ class maks_instagram extends maks_services {
 
 						$last_update_value = $last_data_return[0]->$column_name_value;
 						$last_update_array = json_decode( $last_update_value , true );
-						$last_update_size  = sizeof($last_update_array);
-						$last_update       = $last_update_array[$last_update_size - 1];
+						$last_update       = $last_update_array['last_counts'];
 
-						$last_update_media       = $last_update[1][0];
-						$last_update_followed_by = $last_update[1][1];
-						$last_update_follows     = $last_update[1][2];
+						$last_update_media       = $last_update[0];
+						$last_update_followed_by = $last_update[1];
+						$last_update_follows     = $last_update[2];
 
-						$check_media       = $media       != $last_update_media;
-						$check_followed_by = $followed_by != $last_update_followed_by;
-						$check_follows     = $follows     != $last_update_follows;
+						if($media       == $last_update_media      ) $media       = 0;
+						if($followed_by == $last_update_followed_by) $followed_by = 0;
+						if($follows     == $last_update_follows    ) $follows     = 0;
 
-						if( $check_media || $check_followed_by || $check_follows ) {
+						if( $media || $followed_by || $follows ) {
+
+							$new_metric_counts_array = [ $media , $followed_by , $follows ] ;
+							$new_metrics_array           = [ $current_time , $new_metric_counts_array ];
 
 							$last_data_id = $last_data_return[0]->id;
 
-							$metric_values = [ $current_time , [ $media , $followed_by , $follows ] ];
+							$last_metrics = $last_update_array['metrics'];
+							array_push( $last_metrics , $new_metrics_array );
 
-							array_push( $last_update_array , $metric_values );
+							$last_update_array['metrics']     = $last_metrics;
+							$last_update_array['last_counts'] = $metric_counts_array;
 
 							$metric_data = json_encode($last_update_array);
 
