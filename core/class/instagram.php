@@ -50,13 +50,14 @@ class maks_instagram extends maks_services {
 
 	private $media_recent_url  = '';
 	private $media_recent_response = '';
+	private $media_recent_next_url = '';
 
 	/**
 	 * CONSTRUCTOR based in type of instance
 	 *
 	 * @param $type = new || update
 	 */
-	public function __construct( $type ) {
+	public function __construct( $type = 'new' ) {
 
 		/**
 		 * Construct dependencies
@@ -188,7 +189,7 @@ class maks_instagram extends maks_services {
 				$last_update_key = $this->get_key_from_options_by_call('last_update');
 				$current_time    = $this->get_current_unix_time();
 
-				$this->database_instance->update_options( $last_update_key, $current_time );
+//				$this->database_instance->update_options( $last_update_key, $current_time );
 			}
 		}
 	}
@@ -228,12 +229,10 @@ class maks_instagram extends maks_services {
 					$last_data_id = $last_data_return[0]->id;
 					$last_data = $last_data_return[0]->$column_name_value;
 
-					$is_equals = strcmp( $current_data , $last_data ) != 0;
+					$is_equals = strcmp( $current_data , $last_data ) == 0;
 
-					if($is_equals) {
-
+					if( !$is_equals )
 						$this->database_instance->update_instagram( $last_data_id , $current_data , '' );
-					}
 				}
 
 			}
@@ -318,14 +317,50 @@ class maks_instagram extends maks_services {
 
 		if( !empty($media_recent_response) && ( $display_media || $metric_media ) ) {
 
+			$this->media_recent_next_url = $media_recent_response['pagination']['next_url'];
+
 			$media_recent_data = $media_recent_response['data'];
 
-			if($display_media) {
+			foreach($media_recent_data as $media_recent) {
 
-			}
+				if($display_media) {
 
-			if($metric_media) {
+					$key_id             = $media_recent['id'];
+					$value_created_time = $media_recent['created_time'];
+					$created_time       = date('Y-m-d H:i:s', $value_created_time);
 
+					unset( $media_recent['id'] ); // Remove id from data
+
+					/**
+					 * REMOVE UNNECESSARY
+					 */
+					unset( $media_recent['attribution'] );
+
+					$current_data     = json_encode( $media_recent );
+					$last_data_return = $this->database_instance->get_instagram( $key_id, 1 );
+
+					if( empty( $last_data_return ) ) {
+
+						$this->database_instance->insert_instagram( $key_id, $current_data, $created_time );
+
+					} else {
+
+						$column_name_value = $this->database_instance->get_column_name_value();
+
+						$last_data_id = $last_data_return[0]->id;
+						$last_data = $last_data_return[0]->$column_name_value;
+
+						$is_equals = strcmp( $current_data , $last_data ) == 0;
+
+						if( !$is_equals )
+							$this->database_instance->update_instagram( $last_data_id , $current_data , $created_time );
+					}
+				}
+
+				if($metric_media) {
+
+					// TODO
+				}
 			}
 		}
 	}

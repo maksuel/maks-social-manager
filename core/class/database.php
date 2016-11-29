@@ -169,9 +169,16 @@ class maks_database extends maks_services  {
 
 		$query = '';
 
-		foreach( $keys as $key ) {
-			if( $query != '' ) $query .= ",";
-			$query .= '\'' . $key . '\'';
+		if( gettype($keys) == 'array' ) {
+
+			foreach( $keys as $key ) {
+				if( $query != '' ) $query .= ",";
+				$query .= '\'' . $key . '\'';
+			}
+
+		} else {
+
+			$query .= '\'' . $keys . '\'';
 		}
 
 		$limit = '';
