@@ -11,6 +11,10 @@
  *
  * Closing tag section from header.php
  */
+
+/** direct access protection */
+defined( 'ABSPATH' ) or die( 'Direct access denied!' );
+
 ?>
 	<footer>
 		<blockquote>

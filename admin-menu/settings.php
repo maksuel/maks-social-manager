@@ -9,6 +9,10 @@
 /**
  * Requiring Header
  */
+
+/** direct access protection */
+defined( 'ABSPATH' ) or die( 'Direct access denied!' );
+
 require_once 'header.php';
 ?>
 	<header>

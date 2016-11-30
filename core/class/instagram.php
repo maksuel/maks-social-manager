@@ -16,6 +16,8 @@ class maks_instagram extends maks_services {
 
 	private $options_call_key_value_casting = [
 		'last_update'              => [ 'instagram_last_update'              => ''   , 'int'    ],
+		'client_id'                => [ 'instagram_client_id'                => ''   , 'string' ],
+		'client_secret'            => [ 'instagram_client_secret'            => ''   , 'string' ],
 		'access_token'             => [ 'instagram_access_token'             => ''   , 'string' ],
 		'next_max_id'              => [ 'instagram_next_max_id'              => ''   , 'string' ],
 		'display_header'           => [ 'instagram_display_header'           => true , 'bool'   ],
@@ -385,6 +387,40 @@ class maks_instagram extends maks_services {
 				}
 			}
 		}
+	}
+
+	public function update_options( $calls_values ) {
+
+		if( gettype($calls_values) == 'array' ) {
+
+			foreach( $calls_values as $call => $value ) {
+
+				$key_value = [];
+
+				$key             = $this->get_key_from_options_by_call($call);
+				$key_value[$key] = $value;
+
+				$this->database_instance->update_option($key_value);
+			}
+
+		} else {
+
+			$key             = $this->get_key_from_options_by_call( key($calls_values) );
+			$value           = $calls_values[$key];
+			$key_value[$key] = $value;
+
+			$this->database_instance->update_option($key_value);
+		}
+	}
+
+	public function get_option_value( $call ) {
+
+		$key[] = $this->get_key_from_options_by_call($call);
+
+		$response = $this->database_instance->get_options( $key );
+		$column_name_value = $this->database_instance->get_column_name_value();
+
+		return $response[0]->$column_name_value;
 	}
 
 

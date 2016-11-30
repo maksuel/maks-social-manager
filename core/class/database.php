@@ -203,6 +203,29 @@ class maks_database extends maks_services  {
 		}
 	}
 
+	public function update_option( $key_value ) {
+
+		global $wpdb;
+		$table_name        = $this->get_table_name('options');
+		$column_name_key   = $this->get_column_name_key();
+		$column_name_value = $this->get_column_name_value();
+
+		$key   = key($key_value);
+		$value = $key_value[$key];
+
+		$response = $wpdb->update(
+			$table_name,
+			array(
+				$column_name_value => $value
+			),
+			array(
+				$column_name_key => $key
+			)
+		);
+
+		return $response;
+	}
+
 	public function get_options( $keys ) {
 
 		global $wpdb;
