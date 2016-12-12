@@ -5,12 +5,14 @@ Plugin URI:
 Description: Manage yours socials with professional plugin.
 Version: 0.1
 Author: MAKS Solutions
-Author URI: http://tripdomak.com.br
-License: GPL
-License URI: https://www.gnu.org/licenses/gpl.html
+Author URI:
+License:
+License URI:
 Text Domain:
-Domain Path: /languages
+Domain Path:
 */
+
+namespace MAKS;
 
 /** direct access protection */
 defined( 'ABSPATH' ) or die( 'Direct access denied!' );
@@ -18,16 +20,13 @@ defined( 'ABSPATH' ) or die( 'Direct access denied!' );
 define( 'MAKS_SOCIAL_MANAGER_URI', plugins_url('', __FILE__) );
 define( 'MAKS_SOCIAL_MANAGER_DIR', trailingslashit( dirname(__FILE__) ) );
 
-class MAKS_Social_Manager {
+class social_manager {
 
 	private static $_this;
 
-	private $database_instance;
-	private $instagram_instance;
+	private $database;
+	private $instagram;
 
-	/**
-	 * MAKS_Social_Manager constructor.
-	 */
 	function __construct() {
 
 		// Don't allow more than one instance of the class
@@ -36,151 +35,89 @@ class MAKS_Social_Manager {
 		}
 		self::$_this = $this;
 
+		require_once 'core/database.php';
+		require_once 'core/instagram.php';
+		$this->database  = new core\database();
+		$this->instagram = new core\instagram();
 
-		add_action( 'admin_menu', 'admin_menu' );
+		add_action( 'admin_menu' , [$this, 'admin_menu'] );
+		register_activation_hook( __FILE__ , [$this, 'register_activation'] );
+		register_deactivation_hook( __FILE__ , [$this, 'register_deactivation'] );
+		register_uninstall_hook( __FILE__ , [$this, 'register_uninstall'] );
+	}
 
+	private function check_requirements() {
 
-		require_once 'core/class/instagram.php';
+		global $wpdb;
 
+		$message = file_get_contents( MAKS_SOCIAL_MANAGER_URI . '/requirements.php' );
 
+		version_compare( PHP_VERSION , '7.0.0' , '>=' ) &&
+		isset($wpdb)
+		or wp_die($message);
+	}
 
-		function maks_database_activation() {
+	public function admin_menu() {
 
-			$database_instance  = new maks_database();
-			$instagram_instance = new maks_instagram();
+		add_menu_page(
+			'Social Manager',       // $page_title
+			'Social Manager',       // $menu_title
+			4,                      // $capability
+			'maks-social-manager',  // $menu_slug
+			'',                     // $function
+			'dashicons-smiley',     // $icon_url
+			59                      // $position
+		);
+		add_submenu_page(
+			'maks-social-manager',        // $parent_slug
+			'Settings',                   // $page_title
+			'Settings',                   // $menu_title
+			4,                            // $capability
+			'maks-social-manager',        // $menu_slug
+			[$this, 'menu_settings'] // $function
+		);
 
-			$database_instance->database_activation();
+		add_submenu_page(
+			'maks-social-manager',
+			'Instagram',
+			'Instagram',
+			4,
+			'maks-instagram',
+			[$this, 'menu_instagram']
+		);
+	}
 
-			$instagram_instance->populate();
-		}
+	public function menu_settings()  { require_once 'menu/settings.php';  }
+	public function menu_instagram() { require_once 'menu/instagram.php'; }
 
-		function maks_database_deactivation() {
+	public function register_activation() {
 
-			$database_instance = new maks_database();
+		$this->check_requirements();
 
-			$database_instance->database_deactivation();
-		}
+		$this->database->register_activation();
+		$this->instagram->register_activation();
+	}
 
-		function maks_database_uninstall() {
+	public function register_deactivation() {
 
-			$database_instance = new maks_database();
+		$this->database->register_deactivation();
+		$this->instagram->register_deactivation();
+	}
 
-			$database_instance->database_uninstall();
-		}
+	public function register_uninstall() {
 
-//		function maks_database_update() {
-//
-//			global $maks_db_version;
-//			$check = get_option( 'maks_db_version' );
-//
-//			if( $check < $maks_db_version ) {
-//
-//				maks_db_uninstall();
-//				maks_db_activation();
-//
-//			} elseif( $check == false ) {
-//
-//				maks_db_activation();
-//			}
-//		}
-
-		register_activation_hook(   __FILE__ , 'maks_database_activation'   );
-		register_deactivation_hook( __FILE__ , 'maks_database_deactivation' );
-		register_uninstall_hook(    __FILE__ , 'maks_database_uninstall'    );
-
-
-		/**
-		 * Function to register shortcodes
-		 *
-		 * Example: [shortcode_name id="0"]text[/shortcode_name]
-		 * $atts['id'] = 0
-		 * $content = text
-		 */
-		function maks_shortcodes() {
-
-			require_once 'includes/instagram-print.php';
-
-			function instagram_shortcode( $atts = [] , $content = null , $tag = '' ) {
-
-				// normalize attribute keys, lowercase
-				$atts = array_change_key_case( (array)$atts , CASE_LOWER );
-
-				// default attributes
-				$default = array(
-					'header' => true,
-					'main' => true,
-					'footer' => true,
-					'col' => 4,
-					'display' => 12
-				);
-
-				// override default attributes with user attributes
-				$atts = shortcode_atts( $default , $atts , $tag );
-
-				maks_instagram_print( $atts , $content );
-			}
-
-			add_shortcode( 'maks-instagram', 'instagram_shortcode' );
-			//add_shortcode( 'maks-youtube', 'youtube_shortcode' );
-		}
-
-		/**
-		 * Function to remove shortcodes
-		 *
-		 * Before check if exists
-		 */
-		function maks_remove_shortcode( $shortcode_name ) {
-
-			if( shortcode_exists( $shortcode_name ) ) {
-
-				remove_shortcode( $shortcode_name );
-			}
-		}
-
-		/**
-		 * Calling function to registering shortcodes
-		 *
-		 * Wordpress recommend the 'init' action hook.
-		 * Reference: https://developer.wordpress.org/plugins/shortcodes/basic-shortcodes/
-		 */
-		add_action('init', 'maks_shortcodes');
-
-
-
-		function admin_menu() {
-
-			add_menu_page(
-				'Social Manager',       // $page_title
-				'Social Manager',       // $menu_title
-				4,                      // $capability
-				'maks-social-manager',  // $menu_slug
-				'',                     // $function
-				'dashicons-smiley',     // $icon_url
-				59                      // $position
-			);
-			add_submenu_page(
-				'maks-social-manager',  // $parent_slug
-				'Settings',             // $page_title
-				'Settings',             // $menu_title
-				4,                      // $capability
-				'maks-social-manager',  // $menu_slug
-				'settings_menu'         // $function
-			);
-
-			add_submenu_page('maks-social-manager', 'Instagram', 'Instagram', 4, 'maks-instagram', 'instagram_menu');
-			//add_submenu_page('maks-sm', 'YouTube', 'YouTube', 4, 'maks-sm-yt', 'youtube_menu');
-		}
-
-		function settings_menu() {
-
-			require_once 'admin-menu/settings.php';
-		}
-
-		function instagram_menu() {
-
-			require_once 'admin-menu/instagram.php';
-		}
+		$this->database->register_uninstall();
+		$this->instagram->register_uninstall();
 	}
 }
 
-new MAKS_Social_Manager();
+new social_manager();
+
+/**
+ * TODO > services > remote_get
+ * TODO > php7 refactoring
+ * TODO > TYPE VARS AND RETURNS
+ * TODO > USE %s ANS OTHERS
+ * TODO > USE TERNARY ?? > NULL CHECK
+ * TODO > internationalize plugin
+ */

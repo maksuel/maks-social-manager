@@ -6,6 +6,9 @@
  * Time: 02:53
  */
 
+/** direct access protection */
+defined( 'ABSPATH' ) or die( 'Direct access denied!' );
+
 ?>
 <style>
 	.maks-register {
@@ -46,7 +49,7 @@
 				<label for="id_name" class="col-sm-3 control-label">Application Name:</label>
 				<div class="col-sm-9">
 					<input type="text" id="id_name" class="form-control"
-					       value="Social Manager by MAKS Solutions" readonly>
+					       value="Social Manager WordPress Plugin App" readonly>
 				</div>
 			</div>
 			<div class="form-group">
@@ -69,7 +72,7 @@
 				<label for="id_website_url" class="col-sm-3 control-label">Website URL:</label>
 				<div class="col-sm-9">
 					<input type="text" id="id_website_url" class="form-control"
-					       value="<?=$site_url?>" readonly>
+					       value="http://maks.solutions/" readonly>
 				</div>
 			</div>
 			<div class="form-group has-error">
@@ -88,10 +91,11 @@
 					<input type="text" id="id_privacy_policy_url" class="form-control" readonly>
 				</div>
 			</div>
-			<div class="form-group">
+			<div class="form-group has-warning">
 				<label for="id_contact_email" class="col-sm-3 control-label">Contact email:</label>
 				<div class="col-sm-9">
-					<input type="text" id="id_contact_email" class="form-control" readonly>
+					<input type="text" id="id_contact_email" class="form-control"
+                           value="support@maks.solutions" readonly>
 				</div>
 			</div>
 			<div class="form-group">
@@ -107,17 +111,13 @@
 	<h3>
 		1<sup>st</sup><br />
 		<small>
-			You can see de colors?!<br />
-			Yellow represent the information that can be modificaded, it's ons example.<br />
-			Red represent the exact information that you need to copy and paste in your application!!!
-		</small>
-	</h3>
-</section>
-<section>
-	<h3>
-		2<sup>nd</sup><br />
-		<small>
-			you only need to click in the button bellow and copy important information and complete the steps to create the base for plugin.
+			You can see the colors?!<br />
+			Yellow represent the information that can be modified.<br />
+            <u>Red represent the exact information that you need to copy and paste in your application!</u><br />
+            <br />
+			You only need to click in the button bellow, login and copy the information.<br />
+            You don't need more information or change anything else to register your Instagram application.<br />
+            Register your application to follow the next step.
 		</small>
 	</h3>
 	<a class="btn btn-primary" href="https://www.instagram.com/accounts/login/?next=%2Fdeveloper%2Fclients%2Fregister%2F" target="_blank">Go to Instagram Developers</a>
@@ -125,10 +125,32 @@
 <hr />
 <section>
 	<h3>
-		3<sup>rd</sup><br />
+		2<sup>nd</sup><br />
 		<small>
-			text
-		</small>
-	</h3>
+			Now that you have your application working, you will need only two codes.<br />
+            - Client ID code<br />
+            - Client Secret code<br />
+            <br />
+            It's easy get it!<br />
+            Below there is one example of the application management.<br />
+            Click on the Manage button to get your codes.
+        </small>
+    </h3>
+</section>
+<hr />
+<section>
+
+    IMAGES
+
+</section>
+<hr />
+<section>
+    <h3>
+        3<sup>rd</sup><br />
+        <small>
+            Now are ready!<br />
+            Copy and paste this codes below and click in Get Access Token<br />
+        </small>
+    </h3>
 </section>
 <hr />

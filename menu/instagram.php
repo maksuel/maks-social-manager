@@ -77,8 +77,7 @@ if( isset($_GET['code']) && !$access_token_response) {
 $visible = false;
 if($client_id_response && $client_secret_response && !$access_token_value) $visible = true;
 
-require_once 'header.php';
-?>
+require_once 'header.php'; /*****************************************************************************************/?>
 	<header>
 		<h1>Instagram Configuration</h1>
 	</header>
@@ -147,10 +146,13 @@ if($visible) {
                 <button type="submit" class="btn btn-primary btn-lg btn-block login-button">Save</button>
             </div>
 
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" value="">
+                    Preserve settings when plugin is removed ???
+                </label>
+            </div>
+
         </form>
 	</section>
-<?php
-/**
- * Requiring Footer
- */
-require_once 'footer.php';
+<?php require_once 'footer.php'; /*************************************************************************************/
