@@ -14,20 +14,20 @@ defined( 'ABSPATH' ) or die( 'Direct access denied!' );
 
 require_once 'services.php';
 
-class database extends services  {
+class database extends services {
 
 	private $version_key = 'maks_database_version';
-	private $version     = 0.1;
+	private $version = 0.2;
 	private $maks_prefix = 'maks_';
 
 	private $tables = [
 		'instagram' => [
 			'structure' => [
-				'time' => [
+				'time'  => [
 					'type'    => 'DATETIME',
 					'default' => '0000-00-00 00:00:00',
 				],
-				'key' => [
+				'key'   => [
 					'type' => 'VARCHAR(50)'
 				],
 				'value' => [
@@ -51,10 +51,10 @@ class database extends services  {
 		$maks_prefix = $this->maks_prefix;
 		$full_prefix = $wp_prefix . $maks_prefix;
 
-		foreach($this->tables as $table => $config) {
+		foreach ( $this->tables as $table => $config ) {
 
-			$table_name = $full_prefix . $table;
-			$this->tables[$table]['name'] = $table_name;
+			$table_name                     = $full_prefix . $table;
+			$this->tables[ $table ]['name'] = $table_name;
 		}
 	}
 
@@ -63,16 +63,16 @@ class database extends services  {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 
-		foreach($this->tables as $table) {
+		foreach ( $this->tables as $table ) {
 
 			$query = "CREATE TABLE {$table['name']} (id MEDIUMINT(9) NOT NULL AUTO_INCREMENT,";
 
-			foreach($table['structure'] as $column => $structure) {
+			foreach ( $table['structure'] as $column => $structure ) {
 
-				$query .= $this->get_column_name($column);
+				$query .= $this->get_column_name( $column );
 				$query .= " {$structure['type']} ";
 
-				if( isset($structure['default']) ) {
+				if ( isset( $structure['default'] ) ) {
 					$query .= "DEFAULT '{$structure['default']}' ";
 				}
 
@@ -82,10 +82,10 @@ class database extends services  {
 			$query .= "PRIMARY KEY  (id)) {$charset_collate};";
 
 			require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-			dbDelta($query);
+			dbDelta( $query );
 		}
 
-		add_option( $this->get_database_version_key() , $this->get_database_version() );
+		add_option( $this->get_database_version_key(), $this->get_database_version() );
 	}
 
 	public function register_deactivation() {
@@ -98,51 +98,41 @@ class database extends services  {
 		global $wpdb;
 
 		/** Remove database version control */
-		delete_option($this->get_database_version_key() );
+		delete_option( $this->get_database_version_key() );
 
 		/** Construct query */
 		$query = '';
 
-		foreach($this->tables as $table) {
+		foreach ( $this->tables as $table ) {
 
-			if( !empty($query) ) $query .= ',';
+			if ( ! empty( $query ) ) {
+				$query .= ',';
+			}
 
 			$query .= $table['name'];
 		}
 
 		/** Drop plugin tables */
-		$wpdb->query("DROP TABLE IF EXISTS {$query}");
+		$wpdb->query( "DROP TABLE IF EXISTS {$query}" );
 	}
 
-	/** GETTERS */
-	public function get_table_name(string $table)   : string { return $this->tables[$table]['name']; }
-	public function get_column_name(string $column) : string { return $this->columns[$column];       }
-	public function get_database_version_key()      : string { return $this->version_key;            }
-	public function get_database_version()          : string { return $this->version;                }
-
-
-
-
-
-
-
-
-
-
-	/** TODO REFACTORING */
-	public function get_instagram( $keys , $filter_limit ) {
+	public function get_results( $table, $keys, $filter_limit = false, $where_column = 'key', $order_by_column = 'time' ) {
 
 		global $wpdb;
-		$table_name       = $this->get_table_name('instagram');
-		$column_name_key  = $this->get_column_name_key();
-		$column_name_time = $this->get_column_name_time();
+		$table_name = $this->get_table_name( $table );
+		$where      = $this->get_column_name( $where_column );
+		$order_by   = $this->get_column_name( $order_by_column );
+		$limit      = $filter_limit ? ' LIMIT ' . (int) $filter_limit : '';
 
 		$query = '';
 
-		if( gettype($keys) == 'array' ) {
+		if ( gettype( $keys ) == 'array' ) {
 
-			foreach( $keys as $key ) {
-				if( $query != '' ) $query .= ",";
+			foreach ( $keys as $key ) {
+
+				if ( $query != '' ) {
+					$query .= ",";
+				}
 				$query .= '\'' . $key . '\'';
 			}
 
@@ -151,68 +141,48 @@ class database extends services  {
 			$query .= '\'' . $keys . '\'';
 		}
 
-		$limit = '';
-
-		if($filter_limit) {
-
-			$limit = 'LIMIT ' . (int)$filter_limit;
-		}
-
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT *
-				 FROM {$table_name}
-				 WHERE {$column_name_key}
-				 IN ({$query})
-				 ORDER BY {$column_name_time}
-				 DESC {$limit}", '')
+				"SELECT * " .
+				"FROM {$table_name} " .
+				"WHERE {$where} " .
+				"IN ({$query}) " .
+				"ORDER BY {$order_by} DESC" .
+				"{$limit}", '' )
 		);
 
 		return $results;
 	}
 
-	public function insert_instagram( $key , $value , $time ) {
+	public function insert( $table, $key, $value, $time_string = null ) {
 
 		global $wpdb;
-		$table_name        = $this->get_table_name('instagram');
-		$column_name_key   = $this->get_column_name_key();
-		$column_name_value = $this->get_column_name_value();
-		$column_name_time  = $this->get_column_name_time();
-
-		if( empty($time) ) {
-
-			$time = $this->get_current_time_string();
-		}
+		$table_name = $this->get_table_name( $table );
+		$time       = $time_string ?? $this->get_current_time_string();
 
 		$response = $wpdb->insert(
 			$table_name,
 			array(
-				$column_name_key   => $key,
-				$column_name_value => $value,
-				$column_name_time  => $time
+				$this->get_column_name( 'time' )  => $time,
+				$this->get_column_name( 'key' )   => $key,
+				$this->get_column_name( 'value' ) => $value
 			)
 		);
 
 		return $response;
 	}
 
-	public function update_instagram( $id , $value , $time ) {
+	public function update( $table, $id, $value, $time_string = null ) {
 
 		global $wpdb;
-		$table_name        = $this->get_table_name('instagram');
-		$column_name_value = $this->get_column_name_value();
-		$column_name_time  = $this->get_column_name_time();
-
-		if( empty($time) ) {
-
-			$time = $this->get_current_time_string();
-		}
+		$table_name = $this->get_table_name( $table );
+		$time       = $time_string ?? $this->get_current_time_string();
 
 		$response = $wpdb->update(
 			$table_name,
 			array(
-				$column_name_time  => $time,
-				$column_name_value => $value
+				$this->get_column_name( 'time' )  => $time,
+				$this->get_column_name( 'value' ) => $value
 			),
 			array(
 				'id' => $id
@@ -221,4 +191,10 @@ class database extends services  {
 
 		return $response;
 	}
+
+	/** GETTERS */
+	public function get_table_name( string $table )  : string { return $this->tables[ $table ]['name']; }
+	public function get_column_name( string $column ): string { return $this->columns[ $column ]; }
+	public function get_database_version_key()       : string { return $this->version_key; }
+	public function get_database_version()           : string { return $this->version; }
 }

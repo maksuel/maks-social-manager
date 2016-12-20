@@ -3,7 +3,7 @@
 Plugin Name: MAKS Social Manager
 Plugin URI:
 Description: Manage yours socials with professional plugin.
-Version: 0.1
+Version: 0.2.0
 Author: MAKS Solutions
 Author URI:
 License:
@@ -17,7 +17,7 @@ namespace MAKS;
 /** direct access protection */
 defined( 'ABSPATH' ) or die( 'Direct access denied!' );
 
-define( 'MAKS_SOCIAL_MANAGER_URI', plugins_url('', __FILE__) );
+define( 'MAKS_SOCIAL_MANAGER_URI', plugins_url( '' , __FILE__ ) );
 define( 'MAKS_SOCIAL_MANAGER_DIR', trailingslashit( dirname(__FILE__) ) );
 
 class social_manager {
@@ -50,7 +50,7 @@ class social_manager {
 
 		global $wpdb;
 
-		$message = file_get_contents( MAKS_SOCIAL_MANAGER_URI . '/requirements.php' );
+		$message = file_get_contents( __DIR__ . '/requirements.php' );
 
 		version_compare( PHP_VERSION , '7.0.0' , '>=' ) &&
 		isset($wpdb)
@@ -114,10 +114,5 @@ class social_manager {
 new social_manager();
 
 /**
- * TODO > services > remote_get
- * TODO > php7 refactoring
- * TODO > TYPE VARS AND RETURNS
- * TODO > USE %s ANS OTHERS
- * TODO > USE TERNARY ?? > NULL CHECK
  * TODO > internationalize plugin
  */
