@@ -47,6 +47,8 @@ class instagram extends services {
 	private $media_recent_next_max_id = '';
 
 	private $key_metric = 'metrics_';
+	private $key_header = 'header_';
+	private $key_media  = 'media_';
 
 	private $database;
 
@@ -98,29 +100,33 @@ class instagram extends services {
 
 		if ( $this->is_validate() ) {
 
+			$metric_header  = $this->options['metric_header'];
+			$display_header = $this->options['display_header'];
+			$metric_media   = $this->options['metric_media'];
+			$display_media  = $this->options['display_media'];
+
+			$check_header = $metric_header || $display_header;
+			$check_media  = $metric_media  || $display_media;
+
 			$has_response = false;
 
-			if ( $this->options['display_header'] ||
-			     $this->options['metric_header']
-			) {
+			$args = [
+				'access_token' => $this->options['access_token']
+			];
 
-				$args                      = [
-					'access_token' => $this->options['access_token']
-				];
+			if ( $check_header ) {
+
 				$this->users_self_response = $this->remote_get( $this->users_self_url, $args );
-				$has_response              = true;
+				$has_response = true;
 			}
 
-			if ( $this->options['display_media'] ||
-			     $this->options['metric_media']
-			) {
+			if ( $check_media ) {
 
-				$args                        = [
-					'access_token' => $this->options['access_token'],
-					'count'        => $this->options['display_number_media']
-				];
+				if( ! $metric_media )
+					$args['count'] = $this->options['display_number_media'];
+
 				$this->media_recent_response = $this->remote_get( $this->media_recent_url, $args );
-				$has_response                = true;
+				$has_response = true;
 			}
 
 			if ( $has_response ) {
@@ -151,16 +157,16 @@ class instagram extends services {
 
 	private function update_database() {
 
+		$users_self_response   = $this->users_self_response;
+		$media_recent_response = $this->media_recent_response;
+
 		$metric_header  = $this->options['metric_header'];
 		$display_header = $this->options['display_header'];
 		$metric_media   = $this->options['metric_media'];
 		$display_media  = $this->options['display_media'];
 
-		$users_self_response   = $this->users_self_response;
-		$media_recent_response = $this->media_recent_response;
-
-		$check_header = ! empty( $users_self_response ) && ( $metric_header || $display_header );
-		$check_media  = ! empty( $media_recent_response ) && ( $metric_media || $display_media );
+		$check_header = !empty( $users_self_response )   && ( $metric_header || $display_header );
+		$check_media  = !empty( $media_recent_response ) && ( $metric_media || $display_media );
 
 		if ( $check_header || $check_media ) {
 
@@ -180,12 +186,14 @@ class instagram extends services {
 
 			if ( $display_header ) {
 
+				$key_header = $this->key_header . $key_id;
+
 				$current_data     = $this->encode( $users_self_data );
-				$last_data_return = $this->database->get_results( 'instagram', $key_id, 1 );
+				$last_data_return = $this->database->get_results( 'instagram', ['IN' => $key_header], 1 );
 
 				if ( empty( $last_data_return ) ) {
 
-					$this->database->insert( 'instagram', $key_id, $current_data );
+					$this->database->insert( 'instagram', $key_header, $current_data );
 
 				} else {
 
@@ -211,7 +219,7 @@ class instagram extends services {
 				$followed_by = $users_self_data['counts']['followed_by'];
 				$follows     = $users_self_data['counts']['follows'];
 
-				$last_data_return = $this->database->get_results( 'instagram', $key_metric, 1 );
+				$last_data_return = $this->database->get_results( 'instagram', ['IN' => $key_metric], 1 );
 
 				$current_time = $this->get_current_unix_time();
 
@@ -291,7 +299,9 @@ class instagram extends services {
 
 				if ( $display_media ) {
 
-					$key_id             = $media_recent['id'];
+					$key_id     = $media_recent['id'];
+					$key_media = $this->key_media . $key_id;
+
 					$value_created_time = $media_recent['created_time'];
 					$created_time       = date( 'Y-m-d H:i:s', $value_created_time );
 
@@ -299,11 +309,11 @@ class instagram extends services {
 					unset( $media_recent['attribution'] ); // REMOVE UNNECESSARY
 
 					$current_data     = $this->encode( $media_recent );
-					$last_data_return = $this->database->get_results( 'instagram', $key_id, 1 );
+					$last_data_return = $this->database->get_results( 'instagram', ['IN' => $key_media], 1 );
 
 					if ( empty( $last_data_return ) ) {
 
-						$this->database->insert( 'instagram', $key_id, $current_data, $created_time );
+						$this->database->insert( 'instagram', $key_media, $current_data, $created_time );
 
 					} else {
 

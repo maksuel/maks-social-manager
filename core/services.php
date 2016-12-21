@@ -78,6 +78,6 @@ class services {
 		return $body;
 	}
 
-	protected function decode( string $string ): array  { return json_decode( $string, true ); }
-	protected function encode( $mixed )        : string { return json_encode( $mixed ); }
+	public function decode( string $string ): array  { return json_decode( $string, true ); }
+	public function encode( $mixed )        : string { return json_encode( $mixed ); }
 }

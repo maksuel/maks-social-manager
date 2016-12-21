@@ -122,33 +122,46 @@ class database extends services {
 		$table_name = $this->get_table_name( $table );
 		$where      = $this->get_column_name( $where_column );
 		$order_by   = $this->get_column_name( $order_by_column );
-		$limit      = $filter_limit ? ' LIMIT ' . (int) $filter_limit : '';
 
-		$query = '';
+		$search = '';
+		$query = "SELECT * " .
+		         "FROM {$table_name} " .
+		         "WHERE {$where} ";
 
-		if ( gettype( $keys ) == 'array' ) {
+		$array_keys = array_keys($keys);
+		$keys = $keys[ $array_keys[0] ];
 
-			foreach ( $keys as $key ) {
+		if($array_keys[0] == 'IN') {
 
-				if ( $query != '' ) {
-					$query .= ",";
+			if ( gettype( $keys ) == 'array' ) {
+
+				foreach ( $keys as $key ) {
+
+					if ( $search != '' ) {
+						$search .= ",";
+					}
+					$search .= '\'' . $key . '\'';
 				}
-				$query .= '\'' . $key . '\'';
+
+			} else {
+
+				$search .= '\'' . $keys . '\'';
 			}
 
-		} else {
+			$query .= "IN ({$search}) ";
 
-			$query .= '\'' . $keys . '\'';
+		} else if($array_keys[0] == 'LIKE') {
+
+			$query .= "LIKE '{$keys}' ";
 		}
 
+		$query .= "ORDER BY {$order_by} DESC";
+
+		if($filter_limit)
+			$query .= ' LIMIT ' . (int) $filter_limit;
+
 		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * " .
-				"FROM {$table_name} " .
-				"WHERE {$where} " .
-				"IN ({$query}) " .
-				"ORDER BY {$order_by} DESC" .
-				"{$limit}", '' )
+			$wpdb->prepare( $query, '' )
 		);
 
 		return $results;

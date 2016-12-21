@@ -40,10 +40,13 @@ class social_manager {
 		$this->database  = new core\database();
 		$this->instagram = new core\instagram();
 
-		add_action( 'admin_menu' , [$this, 'admin_menu'] );
 		register_activation_hook( __FILE__ , [$this, 'register_activation'] );
 		register_deactivation_hook( __FILE__ , [$this, 'register_deactivation'] );
 		register_uninstall_hook( __FILE__ , [$this, 'register_uninstall'] );
+
+		add_action( 'admin_menu' , [$this, 'admin_menu'] );
+
+		add_shortcode( 'maks-instagram', [$this, 'shortcode_instagram'] );
 	}
 
 	private function check_requirements() {
@@ -85,6 +88,15 @@ class social_manager {
 			'maks-instagram',
 			[$this, 'menu_instagram']
 		);
+	}
+
+	public function shortcode_instagram() {
+
+		$content = '';
+
+		include 'shortcode/instagram.php';
+
+		return $content;
 	}
 
 	public function menu_settings()  { require_once 'menu/settings.php';  }
